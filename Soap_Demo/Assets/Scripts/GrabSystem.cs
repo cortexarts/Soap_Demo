@@ -8,14 +8,48 @@ public class GrabSystem : MonoBehaviour
     private Transform slot;
     private PickableObject pickedItem = null;
 
+    private GameObject lastHover;
+
     public float grabDistance = 2f;
+
+    private void Start()
+    {
+        foreach(var item in GameObject.FindGameObjectsWithTag("Chemical"))
+        {
+            Physics.IgnoreCollision(item.GetComponent<Collider>(), GetComponentInParent<Collider>());
+        }
+    }
 
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetButtonDown("Fire1"))
+        RaycastHit placement;
+
+        if(Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out placement, grabDistance))
         {
-            if(pickedItem)
+            if (placement.collider.CompareTag("Hover") && pickedItem)
+            {
+                placement.collider.GetComponent<MeshRenderer>().enabled = true;
+                lastHover = placement.collider.gameObject;
+            }
+        }
+        else
+        {
+            if(lastHover)
+            {
+                lastHover.GetComponent<MeshRenderer>().enabled = false;
+                lastHover = null;
+            }
+        }
+
+
+        if (Input.GetButtonDown("Fire1"))
+        {
+            if (placement.collider.CompareTag("Hover") && pickedItem)
+            {
+                PlaceItem(pickedItem, placement.collider.gameObject);
+            }
+            else if (pickedItem)
             {
                 DropItem(pickedItem);
             }
@@ -41,11 +75,6 @@ public class GrabSystem : MonoBehaviour
     void PickItem(PickableObject item)
     {
         pickedItem = item;
-        if(item == null)
-        {
-            Debug.Log("REEEEEEEEEEEEEEE");
-        }
-
         item.Rb.isKinematic = true;
         item.Rb.velocity = Vector3.zero;
         item.Rb.angularVelocity = Vector3.zero;
@@ -64,5 +93,14 @@ public class GrabSystem : MonoBehaviour
         item.Rb.isKinematic = false;
         item.Rb.detectCollisions = true;
         item.Rb.AddForce(item.transform.forward * 2, ForceMode.VelocityChange);
+    }
+
+    void PlaceItem(PickableObject item, GameObject targetHover)
+    {
+        pickedItem = null;
+        item.transform.SetParent(targetHover.transform);
+        item.transform.position = targetHover.transform.position;
+        targetHover.GetComponent<MeshRenderer>().enabled = false;
+        targetHover.GetComponent<CapsuleCollider>().enabled = false;
     }
 }
