@@ -12,6 +12,17 @@ public class GrabSystem : MonoBehaviour
 
     public float grabDistance = 2f;
 
+    private Crosshair m_Crosshair;
+
+    private void Awake()
+    {
+        m_Crosshair = GetComponent<Crosshair>();
+        if (m_Crosshair == null)
+        {
+            Debug.LogError("Failed to get Crosshair");
+        }
+    }
+
     private void Start()
     {
         foreach(var item in GameObject.FindGameObjectsWithTag("Chemical"))
@@ -23,24 +34,35 @@ public class GrabSystem : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        RaycastHit placement;
-
-        if(Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out placement, grabDistance))
+        RaycastHit raycastHit;
+        bool hasRaycastHist = Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out raycastHit, grabDistance);
+        if (hasRaycastHist)
         {
-            if (placement.collider.CompareTag("Hover") && pickedItem)
-            {
-                placement.collider.GetComponent<MeshRenderer>().enabled = true;
-                lastHover = placement.collider.gameObject;
-            }
+            m_Crosshair.SetCrosshair(CrosshairType.Hover);
         }
         else
         {
-            if(lastHover)
-            {
-                lastHover.GetComponent<MeshRenderer>().enabled = false;
-                lastHover = null;
-            }
+            m_Crosshair.SetCrosshair(CrosshairType.Default);
         }
+
+        RaycastHit placement;
+
+            if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out placement, grabDistance))
+            {
+                if (placement.collider.CompareTag("Hover") && pickedItem)
+                {
+                    placement.collider.GetComponent<MeshRenderer>().enabled = true;
+                    lastHover = placement.collider.gameObject;
+                }
+            }
+            else
+            {
+                if (lastHover)
+                {
+                    lastHover.GetComponent<MeshRenderer>().enabled = false;
+                    lastHover = null;
+                }
+            }
 
 
         if (Input.GetButtonDown("Fire1"))
@@ -55,11 +77,10 @@ public class GrabSystem : MonoBehaviour
             }
             else
             {
-                RaycastHit hit;
-                if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, grabDistance))
+                if (hasRaycastHist)
                 {
-                    Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
-                    var pickable = hit.transform.GetComponent<PickableObject>();
+                    Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * raycastHit.distance, Color.yellow);
+                    var pickable = raycastHit.transform.GetComponent<PickableObject>();
                     if (pickable)
                     {
                         Debug.Log("Trying to pick up chemical");
