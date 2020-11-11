@@ -8,7 +8,7 @@ public class GrabSystem : MonoBehaviour
     private Transform slot;
     private PickableObject pickedItem = null;
 
-    private GameObject lastHover;
+    public GameObject lastHover;
 
     public float grabDistance = 2f;
 
@@ -49,77 +49,105 @@ public class GrabSystem : MonoBehaviour
 
         if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out placement, grabDistance))
         {
-            if (placement.collider.CompareTag("Hover") && pickedItem)
+            if (placement.collider.CompareTag("Hover"))
             {
-                placement.collider.GetComponent<MeshRenderer>().enabled = true;
-                lastHover = placement.collider.gameObject;
-                if (Input.GetButtonDown("Fire1"))
+                if (pickedItem)
                 {
-                    PlaceItem(pickedItem, placement.collider.gameObject);
+                    placement.collider.GetComponent<MeshRenderer>().enabled = true;
+                    lastHover = placement.collider.gameObject;
+                    if (Input.GetButtonDown("Fire1"))
+                    {
+                        PlaceItem(pickedItem, placement.collider.gameObject);
+                    }
+                }
+                else
+                {
+                    if (Input.GetButtonDown("Fire1"))
+                    {
+                        Retrieveitem(placement.collider.gameObject);
+                    }
                 }
             }
-        }
-        else
-        {
-            if (lastHover)
+            else if (Input.GetButtonDown("Fire1"))
+            {
+                if (pickedItem)
+                {
+                    DropItem(pickedItem);
+                }
+                else
+                {
+                    if (hasRaycastHist)
+                    {
+                        Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * raycastHit.distance, Color.yellow);
+                        var pickable = raycastHit.transform.GetComponent<PickableObject>();
+                        if (pickable)
+                        {
+                            Debug.Log("Trying to pick up chemical");
+                            PickItem(pickable);
+                        }
+                    }
+                }
+            }
+            else if(lastHover != null)
             {
                 lastHover.GetComponent<MeshRenderer>().enabled = false;
                 lastHover = null;
             }
+
+
+
+
+        }
+    }
+
+
+        void PickItem(PickableObject item)
+        {
+            pickedItem = item;
+            item.Rb.isKinematic = true;
+            item.Rb.velocity = Vector3.zero;
+            item.Rb.angularVelocity = Vector3.zero;
+            item.Rb.detectCollisions = false;
+
+            item.transform.SetParent(slot);
+
+            item.transform.localPosition = Vector3.zero;
+            item.transform.localEulerAngles = Vector3.zero;
         }
 
-        if (Input.GetButtonDown("Fire1"))
+        void DropItem(PickableObject item)
         {
-            if (pickedItem)
+            pickedItem = null;
+            item.transform.SetParent(null);
+            item.Rb.isKinematic = false;
+            item.Rb.detectCollisions = true;
+            item.Rb.AddForce(item.transform.forward * 2, ForceMode.VelocityChange);
+        }
+
+        void PlaceItem(PickableObject item, GameObject targetHover)
+        {
+            pickedItem = null;
+            item.transform.SetParent(null);
+            item.transform.position = targetHover.transform.position;
+            targetHover.GetComponent<MeshRenderer>().enabled = false;
+            //targetHover.GetComponent<CapsuleCollider>().enabled = false;
+            HoldChemical hold = targetHover.GetComponent<HoldChemical>();
+
+            hold.heldItem = item;
+        }
+
+        void Retrieveitem(GameObject targetHover)
+        {
+            HoldChemical hold = targetHover.GetComponent<HoldChemical>();
+            if (hold.heldItem)
             {
-                DropItem(pickedItem);
+                PickItem(hold.heldItem);
+
             }
             else
             {
-                if (hasRaycastHist)
-                {
-                    Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * raycastHit.distance, Color.yellow);
-                    var pickable = raycastHit.transform.GetComponent<PickableObject>();
-                    if (pickable)
-                    {
-                        Debug.Log("Trying to pick up chemical");
-                        PickItem(pickable);
-                    }
-                }
+                Debug.LogError("Can't pick item from target hover");
             }
         }
     }
 
-
-    void PickItem(PickableObject item)
-    {
-        pickedItem = item;
-        item.Rb.isKinematic = true;
-        item.Rb.velocity = Vector3.zero;
-        item.Rb.angularVelocity = Vector3.zero;
-        item.Rb.detectCollisions = false;
-
-        item.transform.SetParent(slot);
-
-        item.transform.localPosition = Vector3.zero;
-        item.transform.localEulerAngles = Vector3.zero;
-    }
-
-    void DropItem(PickableObject item)
-    {
-        pickedItem = null;
-        item.transform.SetParent(null);
-        item.Rb.isKinematic = false;
-        item.Rb.detectCollisions = true;
-        item.Rb.AddForce(item.transform.forward * 2, ForceMode.VelocityChange);
-    }
-
-    void PlaceItem(PickableObject item, GameObject targetHover)
-    {
-        pickedItem = null;
-        item.transform.SetParent(targetHover.transform);
-        item.transform.position = targetHover.transform.position;
-        targetHover.GetComponent<MeshRenderer>().enabled = false;
-        targetHover.GetComponent<CapsuleCollider>().enabled = false;
-    }
-}
