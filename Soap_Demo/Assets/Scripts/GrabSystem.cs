@@ -25,7 +25,7 @@ public class GrabSystem : MonoBehaviour
 
     private void Start()
     {
-        foreach(var item in GameObject.FindGameObjectsWithTag("Chemical"))
+        foreach (var item in GameObject.FindGameObjectsWithTag("Chemical"))
         {
             Physics.IgnoreCollision(item.GetComponent<Collider>(), GetComponentInParent<Collider>());
         }
@@ -47,31 +47,30 @@ public class GrabSystem : MonoBehaviour
 
         RaycastHit placement;
 
-            if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out placement, grabDistance))
-            {
-                if (placement.collider.CompareTag("Hover") && pickedItem)
-                {
-                    placement.collider.GetComponent<MeshRenderer>().enabled = true;
-                    lastHover = placement.collider.gameObject;
-                }
-            }
-            else
-            {
-                if (lastHover)
-                {
-                    lastHover.GetComponent<MeshRenderer>().enabled = false;
-                    lastHover = null;
-                }
-            }
-
-
-        if (Input.GetButtonDown("Fire1"))
+        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out placement, grabDistance))
         {
             if (placement.collider.CompareTag("Hover") && pickedItem)
             {
-                PlaceItem(pickedItem, placement.collider.gameObject);
+                placement.collider.GetComponent<MeshRenderer>().enabled = true;
+                lastHover = placement.collider.gameObject;
+                if (Input.GetButtonDown("Fire1"))
+                {
+                    PlaceItem(pickedItem, placement.collider.gameObject);
+                }
             }
-            else if (pickedItem)
+        }
+        else
+        {
+            if (lastHover)
+            {
+                lastHover.GetComponent<MeshRenderer>().enabled = false;
+                lastHover = null;
+            }
+        }
+
+        if (Input.GetButtonDown("Fire1"))
+        {
+            if (pickedItem)
             {
                 DropItem(pickedItem);
             }
@@ -85,7 +84,6 @@ public class GrabSystem : MonoBehaviour
                     {
                         Debug.Log("Trying to pick up chemical");
                         PickItem(pickable);
-
                     }
                 }
             }
