@@ -9,6 +9,8 @@ public class PickableObject : MonoBehaviour
     private Rigidbody rb;
     public Rigidbody Rb => rb;
 
+
+
     // Start is called before the first frame update
     void Awake()
     {

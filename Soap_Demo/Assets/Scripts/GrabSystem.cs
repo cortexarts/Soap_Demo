@@ -6,9 +6,9 @@ public class GrabSystem : MonoBehaviour
 {
     [SerializeField]
     private Transform slot;
-    private PickableObject pickedItem = null;
+    private PickableObject holdingItem = null;
 
-    public GameObject lastHover;
+    public GameObject lastHover = null;
 
     public float grabDistance = 2f;
 
@@ -31,12 +31,17 @@ public class GrabSystem : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
-        RaycastHit raycastHit;
-        bool hasRaycastHist = Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out raycastHit, grabDistance);
-        if (hasRaycastHist)
+        HandleChemical();
+    }
+
+
+    void HandleChemical()
+    {
+        Ray grabRay = new Ray(transform.position, transform.TransformDirection(Vector3.forward));
+        bool hasRaycastHit = Physics.Raycast(grabRay, out RaycastHit raycastHit, grabDistance);
+        if (hasRaycastHit)
         {
             m_Crosshair.SetCrosshair(CrosshairType.Hover);
         }
@@ -45,109 +50,122 @@ public class GrabSystem : MonoBehaviour
             m_Crosshair.SetCrosshair(CrosshairType.Default);
         }
 
-        RaycastHit placement;
+        bool triedPlacing = false;
 
-        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out placement, grabDistance))
+        //LASTHOVER.COMPARETAG IS STUK, NULLREFERENCE  
+        if(lastHover)
         {
-            if (placement.collider.CompareTag("Hover"))
-            {
-                if (pickedItem)
-                {
-                    placement.collider.GetComponent<MeshRenderer>().enabled = true;
-                    lastHover = placement.collider.gameObject;
-                    if (Input.GetButtonDown("Fire1"))
-                    {
-                        PlaceItem(pickedItem, placement.collider.gameObject);
-                    }
-                }
-                else
-                {
-                    if (Input.GetButtonDown("Fire1"))
-                    {
-                        Retrieveitem(placement.collider.gameObject);
-                    }
-                }
-            }
-            else if (Input.GetButtonDown("Fire1"))
-            {
-                if (pickedItem)
-                {
-                    DropItem(pickedItem);
-                }
-                else
-                {
-                    if (hasRaycastHist)
-                    {
-                        Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * raycastHit.distance, Color.yellow);
-                        var pickable = raycastHit.transform.GetComponent<PickableObject>();
-                        if (pickable)
-                        {
-                            Debug.Log("Trying to pick up chemical");
-                            PickItem(pickable);
-                        }
-                    }
-                }
-            }
-            else if(lastHover != null)
+            if (lastHover.CompareTag("Hover") && (!hasRaycastHit || (hasRaycastHit && !raycastHit.collider.CompareTag("Hover"))))
             {
                 lastHover.GetComponent<MeshRenderer>().enabled = false;
                 lastHover = null;
             }
+        }
 
 
+        if (hasRaycastHit && raycastHit.collider.CompareTag("Hover"))
+        {
+            triedPlacing = true;
+            if (holdingItem)
+            {
+                if(raycastHit.collider.GetComponent<HoldChemical>().heldItem == null)
+                {
+                    raycastHit.collider.GetComponent<MeshRenderer>().enabled = true;
+                }
+                lastHover = raycastHit.collider.gameObject;
+                if (Input.GetButtonDown("Fire1"))
+                {
+                    Debug.Log("Trying to place chemical");
+                    PlaceItem(holdingItem, raycastHit.collider.gameObject);
+                }
+            }
+            else
+            {
+                if (Input.GetButtonDown("Fire1"))
+                {
+                    Debug.Log("Trying to retrieve chemical");
+                    Retrieveitem(raycastHit.collider.gameObject);
+                }
+            }
+        }
+        if (Input.GetButtonDown("Fire1") && !triedPlacing)
+        {
+            Debug.Log($"Pickeditem: {holdingItem}");
+            if (holdingItem)
+            {
+                Debug.Log("Trying to drop up chemical");
+                DropItem(holdingItem);
+            }
+            else
+            {
+                if (hasRaycastHit)
+                {
+                    Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * raycastHit.distance, Color.yellow);
+                    var pickable = raycastHit.transform.GetComponent<PickableObject>();
+                    if (pickable)
+                    {
+                        Debug.Log("Trying to pick up chemical");
+                        PickItem(pickable);
+                    }
+                }
+            }
 
-
+           
         }
     }
 
+    void PickItem(PickableObject item)
+    {
+        holdingItem = item;
+        item.Rb.isKinematic = true;
+        item.Rb.velocity = Vector3.zero;
+        item.Rb.angularVelocity = Vector3.zero;
+        item.Rb.detectCollisions = false;
 
-        void PickItem(PickableObject item)
+        item.transform.SetParent(slot);
+
+        item.transform.localPosition = Vector3.zero;
+        item.transform.localEulerAngles = Vector3.zero;
+    }
+
+    void DropItem(PickableObject item)
+    {
+        holdingItem = null;
+        item.transform.SetParent(null);
+        item.Rb.isKinematic = false;
+        item.Rb.detectCollisions = true;
+        item.Rb.AddForce(item.transform.forward * 2, ForceMode.VelocityChange);
+    }
+
+    void PlaceItem(PickableObject item, GameObject targetHover)
+    {
+        Debug.Log(targetHover.GetComponent<HoldChemical>().heldItem);
+        if(targetHover.GetComponent<HoldChemical>().heldItem == null)
         {
-            pickedItem = item;
-            item.Rb.isKinematic = true;
-            item.Rb.velocity = Vector3.zero;
-            item.Rb.angularVelocity = Vector3.zero;
-            item.Rb.detectCollisions = false;
-
-            item.transform.SetParent(slot);
-
-            item.transform.localPosition = Vector3.zero;
-            item.transform.localEulerAngles = Vector3.zero;
-        }
-
-        void DropItem(PickableObject item)
-        {
-            pickedItem = null;
-            item.transform.SetParent(null);
-            item.Rb.isKinematic = false;
-            item.Rb.detectCollisions = true;
-            item.Rb.AddForce(item.transform.forward * 2, ForceMode.VelocityChange);
-        }
-
-        void PlaceItem(PickableObject item, GameObject targetHover)
-        {
-            pickedItem = null;
+            holdingItem = null;
             item.transform.SetParent(null);
             item.transform.position = targetHover.transform.position;
+            item.transform.rotation = targetHover.transform.rotation;
             targetHover.GetComponent<MeshRenderer>().enabled = false;
             //targetHover.GetComponent<CapsuleCollider>().enabled = false;
             HoldChemical hold = targetHover.GetComponent<HoldChemical>();
 
-            hold.heldItem = item;
-        }
+            hold.heldItem = (PickableChemical) item;
+        }  
+    }
 
-        void Retrieveitem(GameObject targetHover)
+    void Retrieveitem(GameObject targetHover)
+    {
+        HoldChemical hold = targetHover.GetComponent<HoldChemical>();
+        if (hold.heldItem)
         {
-            HoldChemical hold = targetHover.GetComponent<HoldChemical>();
-            if (hold.heldItem)
-            {
-                PickItem(hold.heldItem);
-
-            }
-            else
-            {
-                Debug.LogError("Can't pick item from target hover");
-            }
+            PickItem(hold.heldItem);
+            hold.heldItem = null;
+        }
+        else
+        {
+            Debug.LogError("Can't pick item from target hover");
         }
     }
+}
 
