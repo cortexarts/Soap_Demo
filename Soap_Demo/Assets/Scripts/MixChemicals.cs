@@ -57,6 +57,10 @@ public class MixChemicals : MonoBehaviour
             if(gotAll)
             {
                 Debug.Log("I GOT ALL YESS");
+                if(GameObject.Find("MixedChemicalSpawner").transform.childCount == 0)
+                {
+                    GameObject.Instantiate(mixedChemicalsOptions[mixedChemicalOption].ObjectPrefab, GameObject.Find("MixedChemicalSpawner").transform.position+(Vector3.up), GameObject.Find("MixedChemicalSpawner").transform.rotation);
+                }
             }
         }         
 

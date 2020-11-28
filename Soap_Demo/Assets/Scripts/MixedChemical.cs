@@ -7,6 +7,7 @@ using UnityEngine;
 public class MixedChemical : ScriptableObject
 {
     public string prefabName;
+    public GameObject ObjectPrefab;
     public ChemicalContent[] requiredObjects;
     //TODO Add attributes
 }
