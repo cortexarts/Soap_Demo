@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: mc_Soap
   m_EditorClassIdentifier: 
   prefabName: Soap
-  ObjectPrefab: {fileID: 919132149155446097, guid: 64a3d1f266709ee48b1f41ead4473c08,
+  ObjectPrefab: {fileID: 3814792434715700443, guid: 88c0731afb030a744ba2c99a9d3771da,
     type: 3}
   requiredObjects:
   - {fileID: 11400000, guid: 377d9af7fc7a9b44e8d2065b8e8256fc, type: 2}
