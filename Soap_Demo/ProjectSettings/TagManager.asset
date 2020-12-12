@@ -4,6 +4,9 @@
 TagManager:
   serializedVersion: 2
   tags:
+  - Chemical
+  - Hover
+  - MixerInput
   - Ground
   layers:
   - Default
