@@ -2,7 +2,8 @@
 
 public class FirstPersonMovement : MonoBehaviour
 {
-    public float speed = 5;
+    [SerializeField]
+    private float speed = 5;
     Vector2 velocity;
 
 
