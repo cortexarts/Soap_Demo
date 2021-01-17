@@ -8,9 +8,10 @@ public class GrabSystem : MonoBehaviour
     private Transform slot;
     private PickableObject holdingItem = null;
 
-    public GameObject lastHover = null;
+    private GameObject lastHover = null;
 
-    public float grabDistance = 2f;
+    [SerializeField]
+    private float grabDistance = 2f;
 
     private Crosshair m_Crosshair;
 
@@ -33,14 +34,18 @@ public class GrabSystem : MonoBehaviour
 
     void Update()
     {
-        HandleChemical();
+        if (GetComponentInParent<ToolInventory>().currentlyEquipped == ToolInventory.EquippedTool.HAND)
+        {
+            HandleObject();
+        }
+
     }
 
-
-    void HandleChemical()
+    void HandleObject()
     {
         Ray grabRay = new Ray(transform.position, transform.TransformDirection(Vector3.forward));
         bool hasRaycastHit = Physics.Raycast(grabRay, out RaycastHit raycastHit, grabDistance);
+
         if (hasRaycastHit)
         {
             m_Crosshair.SetCrosshair(CrosshairType.Hover);
@@ -50,10 +55,49 @@ public class GrabSystem : MonoBehaviour
             m_Crosshair.SetCrosshair(CrosshairType.Default);
         }
 
+        //has raycast hit   raycastHit.collider.gameObject.GetComponent<PickableObject>().objectType == PickableObject.ObjectType.SUPERSOAKER
+        if (hasRaycastHit && raycastHit.collider && holdingItem == null)
+        {
+            //Debug.Log("Handling super soaker");
+            if (raycastHit.collider.gameObject.GetComponent<PickableObject>())
+            {
+                if (raycastHit.collider.gameObject.GetComponent<PickableObject>().objectType == PickableObject.ObjectType.SUPERSOAKER) //Null reference
+                {
+                    HandleSuperSoaker(raycastHit);
+                }
+                else if (raycastHit.collider.gameObject.GetComponent<PickableObject>().objectType == PickableObject.ObjectType.CHEMICAL)
+                {
+                    HandleChemical(raycastHit, hasRaycastHit);
+                }
+            }
+            else
+            {
+                HandleChemical(raycastHit, hasRaycastHit);
+            }
+        }
+        else
+        {
+            //Debug.Log("Handling chemical");
+            HandleChemical(raycastHit, hasRaycastHit);
+        }
+    }
+
+    void HandleSuperSoaker(RaycastHit raycastHit)
+    {
+        if (Input.GetButtonDown("Fire1"))
+        {
+            transform.GetChild(0).GetChild(0).gameObject.SetActive(true); //TODO change this 
+            Destroy(raycastHit.collider.gameObject);
+            GetComponentInParent<ToolInventory>().pickedUpSuperSoaker = true;
+            GetComponentInParent<ToolInventory>().currentlyEquipped = ToolInventory.EquippedTool.SUPERSOAKER;
+        }
+    }
+
+    void HandleChemical(RaycastHit raycastHit, bool hasRaycastHit)
+    {
         bool triedPlacing = false;
 
-        //LASTHOVER.COMPARETAG IS STUK, NULLREFERENCE  
-        if(lastHover)
+        if (lastHover)
         {
             if (lastHover.CompareTag("Hover") && (!hasRaycastHit || (hasRaycastHit && !raycastHit.collider.CompareTag("Hover"))))
             {
@@ -62,13 +106,12 @@ public class GrabSystem : MonoBehaviour
             }
         }
 
-
         if (hasRaycastHit && raycastHit.collider.CompareTag("Hover"))
         {
             triedPlacing = true;
             if (holdingItem)
             {
-                if(raycastHit.collider.GetComponent<HoldChemical>().heldItem == null)
+                if (raycastHit.collider.GetComponent<HoldChemical>().heldItem == null)
                 {
                     raycastHit.collider.GetComponent<MeshRenderer>().enabled = true;
                 }
@@ -104,13 +147,11 @@ public class GrabSystem : MonoBehaviour
                     var pickable = raycastHit.transform.GetComponent<PickableObject>();
                     if (pickable)
                     {
-                        Debug.Log("Trying to pick up chemical");
+                        //Debug.Log("Trying to pick up chemical");
                         PickItem(pickable);
                     }
                 }
             }
-
-           
         }
     }
 
@@ -140,7 +181,7 @@ public class GrabSystem : MonoBehaviour
     void PlaceItem(PickableObject item, GameObject targetHover)
     {
         Debug.Log(targetHover.GetComponent<HoldChemical>().heldItem);
-        if(targetHover.GetComponent<HoldChemical>().heldItem == null)
+        if (targetHover.GetComponent<HoldChemical>().heldItem == null)
         {
             holdingItem = null;
             item.transform.SetParent(null);
@@ -150,8 +191,8 @@ public class GrabSystem : MonoBehaviour
             //targetHover.GetComponent<CapsuleCollider>().enabled = false;
             HoldChemical hold = targetHover.GetComponent<HoldChemical>();
 
-            hold.heldItem = (PickableChemical) item;
-        }  
+            hold.heldItem = (PickableChemical)item;
+        }
     }
 
     void Retrieveitem(GameObject targetHover)

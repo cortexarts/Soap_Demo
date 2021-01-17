@@ -5,13 +5,21 @@ using UnityEngine;
 
 public class SuperSoakerController : MonoBehaviour
 {
+    [SerializeField]
+    private GameObject bullet;
 
-    public GameObject bullet;
+    [SerializeField]
+    private float bulletVelocity = 10;
+
+    [SerializeField]
+    private float firerate = 50;
+
     private GameObject instantiadBullet;
-    public float bulletVelocity;
-    public float firerate;
-    private bool firing = false;
+
     private float time;
+
+    [SerializeField]
+    private ChemicalContent loadedChemical;
 
     // Start is called before the first frame update
     void Start()
@@ -22,13 +30,18 @@ public class SuperSoakerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-       if(Input.GetMouseButton(0) && Time.time - time > 60/firerate)
+        FireBullet();
+    }
+
+    void FireBullet()
+    {
+        if (Input.GetMouseButton(0) && Time.time - time > 60 / firerate)
         {
-            
-            Vector3 position = transform.position;
-            Quaternion rotation = transform.rotation;
+            Vector3 position = transform.GetChild(0).transform.position;
+            Quaternion rotation = transform.GetChild(0).transform.rotation;
             instantiadBullet = Instantiate<GameObject>(bullet, position, rotation);
-            Vector3 bulletTrajectory = transform.forward * bulletVelocity;
+            instantiadBullet.GetComponent<BulletController>().SetChemicalType(loadedChemical);
+            Vector3 bulletTrajectory = transform.GetChild(0).transform.forward * bulletVelocity;
             instantiadBullet.GetComponent<Rigidbody>().AddForce(bulletTrajectory, ForceMode.Impulse);
             Destroy(instantiadBullet, 3);
             time = Time.time;
