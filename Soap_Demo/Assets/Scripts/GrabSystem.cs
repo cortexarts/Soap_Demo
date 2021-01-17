@@ -34,7 +34,11 @@ public class GrabSystem : MonoBehaviour
 
     void Update()
     {
-        HandleObject();
+        if (GetComponentInParent<ToolInventory>().currentlyEquipped == ToolInventory.EquippedTool.HAND)
+        {
+            HandleObject();
+        }
+
     }
 
     void HandleObject()
@@ -84,6 +88,8 @@ public class GrabSystem : MonoBehaviour
         {
             transform.GetChild(0).GetChild(0).gameObject.SetActive(true); //TODO change this 
             Destroy(raycastHit.collider.gameObject);
+            GetComponentInParent<ToolInventory>().pickedUpSuperSoaker = true;
+            GetComponentInParent<ToolInventory>().currentlyEquipped = ToolInventory.EquippedTool.SUPERSOAKER;
         }
     }
 

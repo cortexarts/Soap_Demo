@@ -4,16 +4,18 @@ using UnityEngine;
 
 public class BulletController : MonoBehaviour
 {
+    public ChemicalContent chemicalType;
 
-    public GameObject splash;
+    [SerializeField]
+    private GameObject splash;
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.collider.CompareTag("Ground"))
+        if (collision.collider.CompareTag("Ground"))
         {
             Splash();
             Destroy(gameObject);
-        }    
+        }
     }
 
     void Splash()
@@ -22,6 +24,12 @@ public class BulletController : MonoBehaviour
         quaternion = Quaternion.AngleAxis(-90f, Vector3.right);
         GameObject sploosh = Instantiate(splash, transform.position, quaternion);
         sploosh.GetComponent<ParticleSystem>().Play();
-        Destroy(sploosh, 2); 
+        Destroy(sploosh, 2);
+    }
+
+    public void SetChemicalType(ChemicalContent newChemicalContent)
+    {
+        chemicalType = newChemicalContent;
+
     }
 }
