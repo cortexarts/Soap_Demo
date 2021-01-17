@@ -3,12 +3,7 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags:
-  - Chemical
-  - Hover
-  - MixerInput
-  - Ground
-  - Bullet
+  tags: []
   layers:
   - Default
   - TransparentFX
