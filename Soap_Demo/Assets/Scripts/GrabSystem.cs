@@ -84,7 +84,7 @@ public class GrabSystem : MonoBehaviour
 
     void HandleSuperSoaker(RaycastHit raycastHit)
     {
-        if (Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown("Interact"))
         {
             transform.GetChild(0).GetChild(0).gameObject.SetActive(true); //TODO change this 
             Destroy(raycastHit.collider.gameObject);
@@ -124,14 +124,14 @@ public class GrabSystem : MonoBehaviour
             }
             else
             {
-                if (Input.GetButtonDown("Fire1"))
+                if (Input.GetButtonDown("Interact"))
                 {
                     Debug.Log("Trying to retrieve chemical");
                     Retrieveitem(raycastHit.collider.gameObject);
                 }
             }
         }
-        if (Input.GetButtonDown("Fire1") && !triedPlacing)
+        if (Input.GetButtonDown("Interact") && !triedPlacing)
         {
             Debug.Log($"Pickeditem: {holdingItem}");
             if (holdingItem)

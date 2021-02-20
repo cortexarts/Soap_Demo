@@ -30,18 +30,22 @@ public class SuperSoakerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        FireBullet();
+        if (!GameObject.Find("Canvas").transform.Find("Radial menu").gameObject.activeInHierarchy) //TODO CHANGE THIS TO SOMETHING BETTER
+        {
+            FireBullet();
+        }
+
     }
 
     void FireBullet()
     {
         if (Input.GetMouseButton(0) && Time.time - time > 60 / firerate)
         {
-            Vector3 position = transform.GetChild(0).transform.position;
-            Quaternion rotation = transform.GetChild(0).transform.rotation;
+            Vector3 position = transform.position;
+            Quaternion rotation = transform.rotation;
             instantiadBullet = Instantiate<GameObject>(bullet, position, rotation);
             instantiadBullet.GetComponent<BulletController>().SetChemicalType(loadedChemical);
-            Vector3 bulletTrajectory = transform.GetChild(0).transform.forward * bulletVelocity;
+            Vector3 bulletTrajectory = transform.forward * bulletVelocity;
             instantiadBullet.GetComponent<Rigidbody>().AddForce(bulletTrajectory, ForceMode.Impulse);
             Destroy(instantiadBullet, 3);
             time = Time.time;
